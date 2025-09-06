@@ -45,6 +45,11 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Setup Node.js (for version bumping)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
       - name: Install dependencies
         run: bun install
 
@@ -58,41 +63,32 @@ jobs:
           # Add your actual test command here when ready
           # bun test
 
-      - name: Get current version for tagging
+      - name: Get current version for reference
         id: current-version
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "📦 Current version for tagging: $VERSION"
+          echo "📦 Current version: $VERSION"
 
       - name: Configure git
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
-      - name: Create tag from current version
-        run: |
-          TAG="v${{ steps.current-version.outputs.version }}"
-          echo "🏷️ Creating tag: $TAG"
-          git tag "$TAG"
-          git push origin "$TAG"
-          echo "✅ Tag created and pushed successfully"
-
-      - name: Bump version
+      - name: Bump version and create tag
         id: bump-version
         run: |
           echo "⬆️ Bumping version with type: ${{ steps.bump-type.outputs.bump-type }}"
-          bun version --${{ steps.bump-type.outputs.bump-type }}
+          npm version ${{ steps.bump-type.outputs.bump-type }}
           NEW_VERSION=$(node -p "require('./package.json').version")
           echo "new-version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "✅ Version bumped to: $NEW_VERSION"
+          echo "✅ Version bumped to: $NEW_VERSION and tag created"
 
-      - name: Commit version bump
+      - name: Push changes and tags
         run: |
-          git add package.json
-          git commit -m "chore: bump version to ${{ steps.bump-version.outputs.new-version }}"
           git push origin ${GITHUB_REF#refs/heads/}
-          echo "✅ Version bump committed and pushed"
+          git push origin --tags
+          echo "✅ Version bump and tags pushed successfully"
 
       - name: Setup Node.js for npm publish
         uses: actions/setup-node@v4
