@@ -1,9 +1,21 @@
 {
+  "private": false,
   "name": "@decoi/treaty",
-  "module": "src/index.ts",
-  "version": "0.0.1",
   "description": "Core TypeScript library for defining contracts, endpoints, and scenarios",
+  "version": "0.0.1",
   "type": "module",
+  "module": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "bun tsc"
+  },
   "devDependencies": {
     "@types/bun": "latest"
   },
