@@ -5,6 +5,12 @@ on:
     branches:
       - "release/**"
 
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  actions: read
+
 jobs:
   prepare-release:
     runs-on: ubuntu-latest
