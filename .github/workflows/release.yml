@@ -3,187 +3,41 @@ name: Release
 on:
   push:
     branches:
-      - "release/**"
-  issue_comment:
-    types: [created]
+      - "release/patch/**"
+      - "release/minor/**"
+      - "release/major/**"
 
 permissions:
   contents: write
-  issues: write
-  pull-requests: write
-  actions: read
 
 jobs:
-  prepare-release:
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    outputs:
-      current-version: ${{ steps.get-version.outputs.version }}
-      release-branch: ${{ steps.branch-info.outputs.branch }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Get branch info
-        id: branch-info
-        run: |
-          echo "branch=${GITHUB_REF#refs/heads/}" >> $GITHUB_OUTPUT
-
-      - name: Get current version
-        id: get-version
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Current version: $VERSION"
-
-      - name: Create release issue
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const { data: workflow } = await github.rest.actions.getWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.runId
-            });
-
-            const issue = await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `🚀 Release ${workflow.head_branch} - Select Version Bump`,
-              body: `
-            ## Release Request for \`${workflow.head_branch}\`
-
-            Current version: **${{ steps.get-version.outputs.version }}**
-
-            Please select the type of version bump for this release:
-
-            **Comment with one of the following:**
-            - \`/release patch\` - for bug fixes (e.g., 1.0.0 → 1.0.1)
-            - \`/release minor\` - for new features (e.g., 1.0.0 → 1.1.0)  
-            - \`/release major\` - for breaking changes (e.g., 1.0.0 → 2.0.0)
-
-            ---
-            **Workflow Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
-            **Branch:** \`${{ steps.branch-info.outputs.branch }}\`
-              `,
-              labels: ['release', 'needs-input']
-            });
-
-            console.log(`Created issue #${issue.data.number} for release approval`);
-
-  handle-release-comment:
-    if: github.event_name == 'issue_comment' && contains(github.event.comment.body, '/release') && contains(github.event.issue.labels.*.name, 'release')
+  release:
     runs-on: ubuntu-latest
     steps:
-      - name: Debug event info
+      - name: Extract bump type from branch
+        id: bump-type
         run: |
-          echo "Event name: ${{ github.event_name }}"
-          echo "Comment body: ${{ github.event.comment.body }}"
-          echo "Issue labels: ${{ toJson(github.event.issue.labels) }}"
-          echo "Actor: ${{ github.actor }}"
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          echo "Full branch name: $BRANCH_NAME"
 
-      - name: Check if commenter has permission
-        uses: actions/github-script@v7
-        with:
-          script: |
-            try {
-              const { data: collaborator } = await github.rest.repos.getCollaboratorPermissionLevel({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                username: context.actor
-              });
-              
-              if (!['admin', 'write'].includes(collaborator.permission)) {
-                await github.rest.issues.createComment({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  issue_number: context.payload.issue.number,
-                  body: `❌ @${context.actor} does not have permission to trigger releases. Only users with write or admin access can trigger releases.`
-                });
-                throw new Error(`User ${context.actor} does not have permission to trigger releases`);
-              }
-              console.log(`User ${context.actor} has ${collaborator.permission} permission`);
-            } catch (error) {
-              console.error('Permission check failed:', error);
-              throw error;
-            }
+          if [[ "$BRANCH_NAME" =~ ^release/patch/.+ ]]; then
+            BUMP_TYPE="patch"
+          elif [[ "$BRANCH_NAME" =~ ^release/minor/.+ ]]; then
+            BUMP_TYPE="minor"
+          elif [[ "$BRANCH_NAME" =~ ^release/major/.+ ]]; then
+            BUMP_TYPE="major"
+          else
+            echo "❌ Invalid branch name format!"
+            echo "Expected: release/{patch|minor|major}/feature-name"
+            echo "Got: $BRANCH_NAME"
+            exit 1
+          fi
 
-      - name: Parse and validate bump type
-        id: parse-bump
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const comment = context.payload.comment.body;
-            console.log(`Processing comment: ${comment}`);
-            const match = comment.match(/\/release\s+(patch|minor|major)/);
-
-            if (!match) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.issue.number,
-                body: `❌ Invalid release command. Please use one of:
-                - \`/release patch\`
-                - \`/release minor\`
-                - \`/release major\``
-              });
-              throw new Error('Invalid release command');
-            }
-
-            const bumpType = match[1];
-            console.log(`Parsed bump type: ${bumpType}`);
-            core.setOutput('bump-type', bumpType);
-
-            // Add reaction to show command was recognized
-            await github.rest.reactions.createForIssueComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: context.payload.comment.id,
-              content: 'rocket'
-            });
-
-      - name: Get release branch from issue
-        id: get-branch
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const issue = context.payload.issue;
-            console.log('Issue body:', issue.body);
-            const branchMatch = issue.body.match(/\*\*Branch:\*\* `([^`]+)`/);
-
-            if (!branchMatch) {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.payload.issue.number,
-                body: `❌ Could not extract branch information from issue. Please check the issue format.`
-              });
-              throw new Error('Could not extract branch from issue');
-            }
-
-            const branch = branchMatch[1];
-            console.log(`Found branch: ${branch}`);
-            core.setOutput('branch', branch);
-
-      - name: Add processing comment
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.payload.issue.number,
-              body: `🚀 **Starting release process...**
-              
-            - **Bump type:** \`${{ steps.parse-bump.outputs.bump-type }}\`
-            - **Branch:** \`${{ steps.get-branch.outputs.branch }}\`
-            - **Triggered by:** @${{ github.actor }}
-
-            The release workflow is now running. You can track progress in the [Actions tab](${{ github.server_url }}/${{ github.repository }}/actions).`
-            });
+          echo "bump-type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+          echo "✅ Detected bump type: $BUMP_TYPE"
 
       - uses: actions/checkout@v4
         with:
-          ref: ${{ steps.get-branch.outputs.branch }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Bun
@@ -209,7 +63,7 @@ jobs:
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "Current version for tagging: $VERSION"
+          echo "📦 Current version for tagging: $VERSION"
 
       - name: Configure git
         run: |
@@ -219,24 +73,26 @@ jobs:
       - name: Create tag from current version
         run: |
           TAG="v${{ steps.current-version.outputs.version }}"
-          echo "Creating tag: $TAG"
+          echo "🏷️ Creating tag: $TAG"
           git tag "$TAG"
           git push origin "$TAG"
+          echo "✅ Tag created and pushed successfully"
 
       - name: Bump version
         id: bump-version
         run: |
-          echo "Bumping version with type: ${{ steps.parse-bump.outputs.bump-type }}"
-          bun version --${{ steps.parse-bump.outputs.bump-type }}
+          echo "⬆️ Bumping version with type: ${{ steps.bump-type.outputs.bump-type }}"
+          bun version --${{ steps.bump-type.outputs.bump-type }}
           NEW_VERSION=$(node -p "require('./package.json').version")
           echo "new-version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "New version: $NEW_VERSION"
+          echo "✅ Version bumped to: $NEW_VERSION"
 
       - name: Commit version bump
         run: |
           git add package.json
           git commit -m "chore: bump version to ${{ steps.bump-version.outputs.new-version }}"
-          git push origin ${{ steps.get-branch.outputs.branch }}
+          git push origin ${GITHUB_REF#refs/heads/}
+          echo "✅ Version bump committed and pushed"
 
       - name: Setup Node.js for npm publish
         uses: actions/setup-node@v4
@@ -245,49 +101,24 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Publish to npm
-        run: npm publish
+        run: |
+          echo "📦 Publishing to npm..."
+          npm publish
+          echo "✅ Successfully published to npm!"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Update issue with success
-        if: success()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.payload.issue.number,
-              body: `✅ **Release completed successfully!**
-              
-            - **Tag created:** \`v${{ steps.current-version.outputs.version }}\`
-            - **New version:** \`${{ steps.bump-version.outputs.new-version }}\`
-            - **Published to npm:** ✅
-            - **Branch:** \`${{ steps.get-branch.outputs.branch }}\`
-
-            The package has been published to npm with version \`${{ steps.bump-version.outputs.new-version }}\`.`
-            });
-
-            await github.rest.issues.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.payload.issue.number,
-              state: 'closed',
-              labels: ['release', 'completed']
-            });
-
-      - name: Handle errors
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.payload.issue.number,
-              body: `❌ **Release failed!**
-              
-            The release process encountered an error. Please check the [workflow logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
-
-            You can try again by commenting with the release command once the issue is resolved.`
-            });
+      - name: Create release summary
+        run: |
+          echo "## ✅ Release Completed Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${GITHUB_REF#refs/heads/}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Bump type:** \`${{ steps.bump-type.outputs.bump-type }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Previous version:** \`${{ steps.current-version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag created:** \`v${{ steps.current-version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**New version:** \`${{ steps.bump-version.outputs.new-version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Published to npm:** ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Check npm: https://www.npmjs.com/package/$(node -p 'require(\"./package.json\").name')" >> $GITHUB_STEP_SUMMARY
+          echo "- Merge this branch to main if needed" >> $GITHUB_STEP_SUMMARY
