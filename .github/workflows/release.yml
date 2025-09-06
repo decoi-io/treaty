@@ -115,8 +115,8 @@ jobs:
           echo "**Branch:** \`${GITHUB_REF#refs/heads/}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Bump type:** \`${{ steps.bump-type.outputs.bump-type }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Previous version:** \`${{ steps.current-version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Tag created:** \`v${{ steps.current-version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**New version:** \`${{ steps.bump-version.outputs.new-version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag created:** \`v${{ steps.bump-version.outputs.new-version }}\`" >> $GITHUB_STEP_SUMMARY
           echo "**Published to npm:** ✅" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
