@@ -1,7 +1,7 @@
 {
   "name": "@decoi/treaty",
   "module": "src/index.ts",
-  "version": "..1",
+  "version": "0.0.0",
   "description": "Core TypeScript library for defining contracts, endpoints, and scenarios",
   "type": "module",
   "devDependencies": {
@@ -11,3 +11,4 @@
     "typescript": "^5"
   }
 }
+
