@@ -101,8 +101,13 @@ jobs:
           git tag "v$NEW_VERSION"
           git push origin "v$NEW_VERSION"
 
-      # 10. Publish to npm
-      - name: Publish to npm
-        run: npm publish
+      # 10. Authenticate with npm
+      - name: Set up npm auth
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # 11. Publish to npm
+      - name: Publish to npm
+        run: npm publish --access public
