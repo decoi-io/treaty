@@ -1,4 +1,5 @@
-export const DATATYPE_SYMBOL = Symbol.for("decoi.Treaty.Datatype");
+import type { DATATYPE_SYMBOL } from "../constants/symbols";
+
 /**
  * Base interface implemented by all Treaty data types.
  *

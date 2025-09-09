@@ -1,10 +1,5 @@
+import { CONTRACT_SYMBOL, CONTRACT_SYMBOL_VALUE } from "../constants/symbols";
 import { type Endpoint } from "../endpoints";
-
-/**
- * Global symbol to identify Treaty contract objects.
- * Uses Symbol.for() for cross-package compatibility.
- */
-export const CONTRACT_SYMBOL = Symbol.for("decoi.Treaty.Contract");
 
 /**
  * Properties used to configure a {@link Contract}.
@@ -27,7 +22,7 @@ type ContractProps = {
  */
 export class Contract {
   private props: ContractProps;
-  readonly [CONTRACT_SYMBOL] = "decoi.Treaty.Contract";
+  readonly [CONTRACT_SYMBOL] = CONTRACT_SYMBOL_VALUE;
   /**
    * Creates a new Contract.
    * @param props - Properties defining this contract.
@@ -106,6 +101,6 @@ export const isContract = (obj: unknown): boolean => {
     typeof obj === "object" &&
     obj !== null &&
     CONTRACT_SYMBOL in obj &&
-    (obj as any)[CONTRACT_SYMBOL] === "decoi.Treaty.Contract"
+    (obj as any)[CONTRACT_SYMBOL] === CONTRACT_SYMBOL_VALUE
   );
 };

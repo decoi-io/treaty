@@ -1,7 +1,6 @@
+import type { ENDPOINT_SYMBOL } from "../constants/symbols";
 import type { Scenario } from "../scenarios";
 import { EndpointHTTP, type EndpointHTTPProps } from "./http";
-
-export const ENDPOINT_SYMBOL = Symbol.for("decoi.Treaty.Endpoint");
 
 /**
  * Represents a generic endpoint in a contract.

@@ -1,4 +1,8 @@
-import { SCENARIO_SYMBOL, type Scenario } from "../scenarios";
+import {
+  HTTP_SCENARIO_SYMBOL_VALUE,
+  SCENARIO_SYMBOL,
+} from "../constants/symbols";
+import { type Scenario } from "../scenarios";
 import type { DataType } from "../types";
 
 /**
@@ -92,7 +96,7 @@ export type HTTPResponse = {
 export class ScenarioHTTP implements Scenario {
   private props: ScenarioHTTPProps;
 
-  readonly [SCENARIO_SYMBOL] = "decoi.Treaty.Scenario.HTTP";
+  readonly [SCENARIO_SYMBOL] = HTTP_SCENARIO_SYMBOL_VALUE;
   /**
    * Creates a new HTTP scenario.
    * @param props - Properties defining the HTTP scenario.
@@ -127,6 +131,6 @@ export const isScenarioHTTP = (obj: unknown): boolean => {
     typeof obj === "object" &&
     obj !== null &&
     SCENARIO_SYMBOL in obj &&
-    (obj as any)[SCENARIO_SYMBOL] === "decoi.Treaty.Scenario.HTTP"
+    (obj as any)[SCENARIO_SYMBOL] === HTTP_SCENARIO_SYMBOL_VALUE
   );
 };

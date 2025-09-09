@@ -1,4 +1,8 @@
-import { DATATYPE_SYMBOL, type DataType } from "./";
+import {
+  BOOLEAN_TYPE_SYMBOL_VALUE,
+  DATATYPE_SYMBOL,
+} from "../constants/symbols";
+import { type DataType } from "./";
 
 /**
  * Props used to configure a {@link BooleanType}.
@@ -26,7 +30,7 @@ type BooleanTypeProps = {
 export class BooleanType implements DataType {
   private props: BooleanTypeProps;
 
-  readonly [DATATYPE_SYMBOL] = "decoi.Treaty.DataType.Boolean";
+  readonly [DATATYPE_SYMBOL] = BOOLEAN_TYPE_SYMBOL_VALUE;
 
   /**
    * Creates a new BooleanType.
@@ -82,6 +86,6 @@ export const isBooleanType = (obj: unknown): boolean => {
     obj !== null &&
     obj !== undefined &&
     DATATYPE_SYMBOL in obj &&
-    (obj as any)[DATATYPE_SYMBOL] === "decoi.Treaty.DataType.Boolean"
+    (obj as any)[DATATYPE_SYMBOL] === BOOLEAN_TYPE_SYMBOL_VALUE
   );
 };

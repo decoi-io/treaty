@@ -1,4 +1,8 @@
-import { DATATYPE_SYMBOL, type DataType } from "./";
+import {
+  DATATYPE_SYMBOL,
+  RECORD_TYPE_SYMBOL_VALUE,
+} from "../constants/symbols";
+import { type DataType } from "./";
 
 /**
  * Props used to configure a {@link RecordType}.
@@ -29,7 +33,7 @@ type RecordTypeProps = {
  */
 export class RecordType implements DataType {
   private props: RecordTypeProps;
-  readonly [DATATYPE_SYMBOL] = "decoi.Treaty.DataType.Record";
+  readonly [DATATYPE_SYMBOL] = RECORD_TYPE_SYMBOL_VALUE;
 
   /**
    * Creates a new RecordType.
@@ -100,6 +104,6 @@ export const isRecordType = (obj: unknown): boolean => {
     obj !== null &&
     obj !== undefined &&
     DATATYPE_SYMBOL in obj &&
-    (obj as any)[DATATYPE_SYMBOL] === "decoi.Treaty.DataType.Record"
+    (obj as any)[DATATYPE_SYMBOL] === RECORD_TYPE_SYMBOL_VALUE
   );
 };

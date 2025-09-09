@@ -1,4 +1,5 @@
-import { DATATYPE_SYMBOL, type DataType } from "./";
+import { ARRAY_TYPE_SYMBOL_VALUE, DATATYPE_SYMBOL } from "../constants/symbols";
+import { type DataType } from "./";
 
 /**
  * Props used to configure an {@link ArrayType}.
@@ -41,7 +42,7 @@ type ArrayTypeProps = {
  */
 export class ArrayType implements DataType {
   private props: ArrayTypeProps;
-  readonly [DATATYPE_SYMBOL] = "decoi.Treaty.DataType.Array";
+  readonly [DATATYPE_SYMBOL] = ARRAY_TYPE_SYMBOL_VALUE;
 
   /**
    * Creates a new ArrayType.
@@ -127,6 +128,6 @@ export const isArrayType = (obj: unknown): boolean => {
     obj !== null &&
     obj !== undefined &&
     DATATYPE_SYMBOL in obj &&
-    (obj as any)[DATATYPE_SYMBOL] === "decoi.Treaty.DataType.Array"
+    (obj as any)[DATATYPE_SYMBOL] === ARRAY_TYPE_SYMBOL_VALUE
   );
 };

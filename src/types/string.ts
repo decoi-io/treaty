@@ -1,4 +1,8 @@
-import { DATATYPE_SYMBOL, type DataType } from "./";
+import {
+  DATATYPE_SYMBOL,
+  STRING_TYPE_SYMBOL_VALUE,
+} from "../constants/symbols";
+import { type DataType } from "./";
 
 /**
  * Configuration options for the `string` type.
@@ -35,7 +39,7 @@ type StringTypeProps = {
 export class StringType implements DataType {
   private props: StringTypeProps;
 
-  readonly [DATATYPE_SYMBOL] = "decoi.Treaty.DataType.String";
+  readonly [DATATYPE_SYMBOL] = STRING_TYPE_SYMBOL_VALUE;
 
   constructor(props: StringTypeProps) {
     this.props = props;
@@ -113,6 +117,6 @@ export const isStringType = (obj: unknown): boolean => {
     obj !== null &&
     obj !== undefined &&
     DATATYPE_SYMBOL in obj &&
-    (obj as any)[DATATYPE_SYMBOL] === "decoi.Treaty.DataType.String"
+    (obj as any)[DATATYPE_SYMBOL] === STRING_TYPE_SYMBOL_VALUE
   );
 };

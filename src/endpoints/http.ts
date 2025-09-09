@@ -1,4 +1,8 @@
-import { ENDPOINT_SYMBOL, type Endpoint } from "../endpoints";
+import {
+  ENDPOINT_SYMBOL,
+  HTTP_ENDPOINT_SYMBOL_VALUE,
+} from "../constants/symbols";
+import { type Endpoint } from "../endpoints";
 import type { ScenarioHTTP } from "../scenarios";
 
 /**
@@ -55,7 +59,7 @@ export type EndpointHTTPProps = {
  */
 export class EndpointHTTP implements Endpoint {
   private props: EndpointHTTPProps;
-  readonly [ENDPOINT_SYMBOL] = "decoi.Treaty.Endpoint.HTTP";
+  readonly [ENDPOINT_SYMBOL] = HTTP_ENDPOINT_SYMBOL_VALUE;
   /**
    * Creates a new HTTP endpoint.
    * @param props - Properties defining the endpoint.
@@ -117,6 +121,6 @@ export const isEndpointHTTP = (obj: unknown): boolean => {
     obj !== null &&
     obj !== undefined &&
     ENDPOINT_SYMBOL in obj &&
-    (obj as any)[ENDPOINT_SYMBOL] === "decoi.Treaty.Endpoint.HTTP"
+    (obj as any)[ENDPOINT_SYMBOL] === HTTP_ENDPOINT_SYMBOL_VALUE
   );
 };

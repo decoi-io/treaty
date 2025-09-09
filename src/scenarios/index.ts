@@ -1,6 +1,6 @@
+import type { SCENARIO_SYMBOL } from "../constants/symbols";
 import { ScenarioHTTP, type ScenarioHTTPProps } from "./http";
 
-export const SCENARIO_SYMBOL = Symbol.for("decoi.Treaty.Scenario");
 /**
  * Represents a generic scenario.
  */
