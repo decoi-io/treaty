@@ -6,29 +6,16 @@
  */
 
 /** Primitive and composite data types */
-export {
-  string,
-  StringType,
-  number,
-  NumberType,
-  boolean,
-  BooleanType,
-  array,
-  ArrayType,
-  record,
-  RecordType,
-  optional,
-  OptionalType,
-} from "./types";
+export { string, number, boolean, array, record, optional } from "./internal";
 
 /** Contract builder */
-export { contract as treaty, Contract } from "./contract";
+export { contract as treaty } from "./internal";
 
 /** Endpoint builder and HTTP endpoint class */
-export { endpoint, EndpointHTTP } from "./endpoints";
+export { endpoint } from "./endpoints";
 
 /** Scenario builder and HTTP scenario class */
-export { scenario, ScenarioHTTP } from "./scenarios";
+export { scenario } from "./scenarios";
 
 /**
  * @example

@@ -1,4 +1,4 @@
-import type { DataType } from "./";
+import { DATATYPE_SYMBOL, type DataType } from "./";
 
 /**
  * Props used to configure an {@link OptionalType}.
@@ -23,7 +23,7 @@ type OptionalTypeProps = {
  */
 export class OptionalType implements DataType {
   private props: OptionalTypeProps;
-
+  readonly [DATATYPE_SYMBOL] = "decoi.Treaty.DataType.Optional";
   /**
    * Creates a new OptionalType.
    * @param props - Properties defining the optional type.
@@ -102,4 +102,19 @@ export class OptionalType implements DataType {
  */
 export const optional = (of: DataType | (() => DataType)): OptionalType => {
   return new OptionalType({ Of: of });
+};
+
+/**
+ * Checks if an object implements the OptionalType.
+ * @param obj - Object to check
+ * @returns true if object has the DATATYPE_SYMBOL symbol set.
+ */
+export const isOptionalType = (obj: unknown): boolean => {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    obj !== undefined &&
+    DATATYPE_SYMBOL in obj &&
+    (obj as any)[DATATYPE_SYMBOL] === "decoi.Treaty.DataType.Optional"
+  );
 };
