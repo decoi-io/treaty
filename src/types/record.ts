@@ -1,4 +1,4 @@
-import type { DataType } from "./";
+import { DATATYPE_SYMBOL, type DataType } from "./";
 
 /**
  * Props used to configure a {@link RecordType}.
@@ -29,6 +29,7 @@ type RecordTypeProps = {
  */
 export class RecordType implements DataType {
   private props: RecordTypeProps;
+  readonly [DATATYPE_SYMBOL] = "decoi.Treaty.DataType.Record";
 
   /**
    * Creates a new RecordType.
@@ -86,4 +87,19 @@ export class RecordType implements DataType {
  */
 export const record = (props: RecordTypeProps): RecordType => {
   return new RecordType(props);
+};
+
+/**
+ * Checks if an object implements the RecordType.
+ * @param obj - Object to check
+ * @returns true if object has the DATATYPE_SYMBOL symbol set.
+ */
+export const isRecordType = (obj: unknown): boolean => {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    obj !== undefined &&
+    DATATYPE_SYMBOL in obj &&
+    (obj as any)[DATATYPE_SYMBOL] === "decoi.Treaty.DataType.Record"
+  );
 };

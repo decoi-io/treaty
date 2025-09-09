@@ -1,4 +1,4 @@
-import type { DataType } from "./";
+import { DATATYPE_SYMBOL, type DataType } from "./";
 
 /**
  * Props used to configure an {@link ArrayType}.
@@ -41,6 +41,7 @@ type ArrayTypeProps = {
  */
 export class ArrayType implements DataType {
   private props: ArrayTypeProps;
+  readonly [DATATYPE_SYMBOL] = "decoi.Treaty.DataType.Array";
 
   /**
    * Creates a new ArrayType.
@@ -113,4 +114,19 @@ export class ArrayType implements DataType {
  */
 export const array = (props: ArrayTypeProps): ArrayType => {
   return new ArrayType(props);
+};
+
+/**
+ * Checks if an object implements the ArrayType.
+ * @param obj - Object to check
+ * @returns true if object has the DATATYPE_SYMBOL symbol set.
+ */
+export const isArrayType = (obj: unknown): boolean => {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    obj !== undefined &&
+    DATATYPE_SYMBOL in obj &&
+    (obj as any)[DATATYPE_SYMBOL] === "decoi.Treaty.DataType.Array"
+  );
 };

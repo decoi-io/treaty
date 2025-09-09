@@ -1,5 +1,6 @@
 import { ScenarioHTTP, type ScenarioHTTPProps } from "./http";
 
+export const SCENARIO_SYMBOL = Symbol.for("decoi.Treaty.Scenario");
 /**
  * Represents a generic scenario.
  */
@@ -9,6 +10,8 @@ export interface Scenario {
 
   /** Returns the human-readable description of this scenario, if any. */
   getDescription(): string | undefined;
+
+  readonly [SCENARIO_SYMBOL]: string;
 }
 
 /**
@@ -51,4 +54,4 @@ class Collection {
 export const scenario = new Collection();
 
 /** Export the HTTP scenario class directly for advanced use or typing. */
-export { ScenarioHTTP } from "./http";
+export { ScenarioHTTP, isScenarioHTTP } from "./http";

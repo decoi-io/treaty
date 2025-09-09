@@ -1,100 +1,120 @@
-name: Release Treaty
+name: Release
 
-# Trigger only on release branches
 on:
   push:
     branches:
-      - "release/*"
+      - "release/patch/**"
+      - "release/minor/**"
+      - "release/major/**"
+
+permissions:
+  contents: write
 
 jobs:
   release:
     runs-on: ubuntu-latest
-
     steps:
-      # 1. Checkout the repository
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      # 2. Setup Bun
-      - name: Setup Bun
-        uses: oven-sh/bun@v1
-
-      # 3. Install dependencies
-      - name: Install dependencies
-        run: bun install
-
-      # 4. Determine bump type from branch name
-      - name: Determine bump type
-        id: bump
+      - name: Extract bump type from branch
+        id: bump-type
         run: |
-          BRANCH="${GITHUB_REF#refs/heads/}"
-          echo "Release branch: $BRANCH"
-          if [[ "$BRANCH" =~ release/patch/ ]]; then
-            echo "BUMP=patch" >> $GITHUB_ENV
-          elif [[ "$BRANCH" =~ release/minor/ ]]; then
-            echo "BUMP=minor" >> $GITHUB_ENV
-          elif [[ "$BRANCH" =~ release/major/ ]]; then
-            echo "BUMP=major" >> $GITHUB_ENV
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          echo "Full branch name: $BRANCH_NAME"
+
+          if [[ "$BRANCH_NAME" =~ ^release/patch/.+ ]]; then
+            BUMP_TYPE="patch"
+          elif [[ "$BRANCH_NAME" =~ ^release/minor/.+ ]]; then
+            BUMP_TYPE="minor"
+          elif [[ "$BRANCH_NAME" =~ ^release/major/.+ ]]; then
+            BUMP_TYPE="major"
           else
-            echo "Invalid release branch name. Must be release/patch|minor|major/... "
+            echo "❌ Invalid branch name format!"
+            echo "Expected: release/{patch|minor|major}/feature-name"
+            echo "Got: $BRANCH_NAME"
             exit 1
           fi
 
-      # 5. Determine next version
-      - name: Determine next version
-        id: version
+          echo "bump-type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+          echo "✅ Detected bump type: $BUMP_TYPE"
+
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Setup Node.js (for version bumping)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build project
+        run: bun run build
+
+      - name: Test (placeholder)
         run: |
-          current=$(git tag --sort=-v:refname | head -n1 || echo "v0.0.0")
-          echo "Current version: $current"
-          current=${current#v}
-          IFS='.' read -r major minor patch <<< "$current"
+          echo "🧪 Running tests..."
+          echo "✅ Tests would run here"
+          # Add your actual test command here when ready
+          # bun test
 
-          if [[ "$BUMP" == "patch" ]]; then
-            patch=$((patch+1))
-          elif [[ "$BUMP" == "minor" ]]; then
-            minor=$((minor+1))
-            patch=0
-          elif [[ "$BUMP" == "major" ]]; then
-            major=$((major+1))
-            minor=0
-            patch=0
-          fi
-
-          NEW_VERSION="$major.$minor.$patch"
-          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
-          echo "Next version: $NEW_VERSION"
-
-      # 6. Update package.json version
-      - name: Update package.json version
+      - name: Get current version for reference
+        id: current-version
         run: |
-          node -e "
-          const fs = require('fs');
-          const pkg = JSON.parse(fs.readFileSync('package.json'));
-          pkg.version = process.env.NEW_VERSION;
-          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
-          "
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "📦 Current version: $VERSION"
 
-      # 7. Commit version bump to release branch
-      - name: Commit version bump
+      - name: Configure git
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json
-          git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
-          git push origin HEAD:${GITHUB_REF#refs/heads/}
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
 
-      # 8. Build the project
-      - name: Build
-        run: bun tsc
-
-      # 9. Create Git tag for the release
-      - name: Tag release
+      - name: Bump version and create tag
+        id: bump-version
         run: |
-          git tag "v$NEW_VERSION"
-          git push origin "v$NEW_VERSION"
+          echo "⬆️ Bumping version with type: ${{ steps.bump-type.outputs.bump-type }}"
+          npm version ${{ steps.bump-type.outputs.bump-type }}
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "new-version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "✅ Version bumped to: $NEW_VERSION and tag created"
 
-      # 10. Publish to npm
+      - name: Push changes and tags
+        run: |
+          git push origin ${GITHUB_REF#refs/heads/}
+          git push origin --tags
+          echo "✅ Version bump and tags pushed successfully"
+
+      - name: Setup Node.js for npm publish
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          registry-url: "https://registry.npmjs.org"
+
       - name: Publish to npm
-        run: npm publish
+        run: |
+          echo "📦 Publishing to npm..."
+          npm publish
+          echo "✅ Successfully published to npm!"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create release summary
+        run: |
+          echo "## ✅ Release Completed Successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${GITHUB_REF#refs/heads/}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Bump type:** \`${{ steps.bump-type.outputs.bump-type }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Previous version:** \`${{ steps.current-version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**New version:** \`${{ steps.bump-version.outputs.new-version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag created:** \`v${{ steps.bump-version.outputs.new-version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Published to npm:** ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Check npm: https://www.npmjs.com/package/$(node -p 'require(\"./package.json\").name')" >> $GITHUB_STEP_SUMMARY
+          echo "- Merge this branch to main if needed" >> $GITHUB_STEP_SUMMARY

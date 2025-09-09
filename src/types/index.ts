@@ -1,3 +1,4 @@
+export const DATATYPE_SYMBOL = Symbol.for("decoi.Treaty.Datatype");
 /**
  * Base interface implemented by all Treaty data types.
  *
@@ -25,40 +26,42 @@ export interface DataType {
    * Useful for referencing types across records and contracts.
    */
   getID(): string;
+
+  readonly [DATATYPE_SYMBOL]: string;
 }
 
 /**
  * String type builder and inferred type.
  * Used for plain text fields.
  */
-export { string, StringType } from "./string";
+export { string, StringType, isStringType } from "./string";
 
 /**
  * Number type builder and inferred type.
  * Used for integer or floating-point fields.
  */
-export { number, NumberType } from "./number";
+export { number, NumberType, isNumberType } from "./number";
 
 /**
  * Boolean type builder and inferred type.
  * Used for true/false values.
  */
-export { boolean, BooleanType } from "./boolean";
+export { boolean, BooleanType, isBooleanType } from "./boolean";
 
 /**
  * Record type builder and inferred type.
  * Represents an object with named fields.
  */
-export { record, RecordType } from "./record";
+export { record, RecordType, isRecordType } from "./record";
 
 /**
  * Array type builder and inferred type.
  * Represents a list of values of the same type.
  */
-export { array, ArrayType } from "./array";
+export { array, ArrayType, isArrayType } from "./array";
 
 /**
  * Optional wrapper and inferred type.
  * Makes any type nullable or undefined.
  */
-export { optional, OptionalType } from "./optional";
+export { optional, OptionalType, isOptionalType } from "./optional";

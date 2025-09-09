@@ -1,4 +1,4 @@
-import type { DataType } from "./";
+import { DATATYPE_SYMBOL, type DataType } from "./";
 
 /**
  * Configuration options for the `number` type.
@@ -31,6 +31,8 @@ type NumberTypeProps = {
  */
 export class NumberType implements DataType {
   private props: NumberTypeProps;
+
+  readonly [DATATYPE_SYMBOL] = "decoi.Treaty.DataType.Number";
 
   constructor(props: NumberTypeProps) {
     this.props = props;
@@ -90,4 +92,19 @@ export class NumberType implements DataType {
  */
 export const number = (props: NumberTypeProps): NumberType => {
   return new NumberType(props);
+};
+
+/**
+ * Checks if an object implements the BooleanType.
+ * @param obj - Object to check
+ * @returns true if object has the DATATYPE_SYMBOL symbol set.
+ */
+export const isNumberType = (obj: unknown): boolean => {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    obj !== undefined &&
+    DATATYPE_SYMBOL in obj &&
+    (obj as any)[DATATYPE_SYMBOL] === "decoi.Treaty.DataType.Number"
+  );
 };

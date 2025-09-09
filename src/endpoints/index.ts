@@ -1,6 +1,8 @@
 import type { Scenario } from "../scenarios";
 import { EndpointHTTP, type EndpointHTTPProps } from "./http";
 
+export const ENDPOINT_SYMBOL = Symbol.for("decoi.Treaty.Endpoint");
+
 /**
  * Represents a generic endpoint in a contract.
  */
@@ -16,6 +18,8 @@ export interface Endpoint {
 
   /** Returns the human-readable description of this endpoint, if any. */
   getDescription(): string | undefined;
+
+  readonly [ENDPOINT_SYMBOL]: string;
 }
 
 /**
@@ -56,4 +60,4 @@ class Collection {
 export const endpoint = new Collection();
 
 /** Export the HTTP endpoint class directly for advanced use or typing. */
-export { EndpointHTTP } from "./http";
+export { EndpointHTTP, isEndpointHTTP } from "./http";
