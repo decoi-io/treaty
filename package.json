@@ -2,7 +2,7 @@
   "private": false,
   "name": "@decoi/treaty",
   "description": "Core TypeScript library for defining contracts, endpoints, and scenarios",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "type": "module",
   "module": "src/index.ts",
   "main": "dist/index.js",
